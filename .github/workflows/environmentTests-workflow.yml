@@ -11,14 +11,13 @@ permissions:
 
 env:
   templateFile: ./environmentTests/main.bicep
-  devWorkloadIdentityAppID: 232b31e9-6f27-49f8-b9ec-5b6b1f3ceb8a
   prdWorkloadIdentityAppID: 2b10c58e-fd7c-4599-adfc-205c68e9e79d
   workloadIdentitySubID: 7a86d903-0585-40e1-8af9-92a5efc19c1c
   workloadIdentityTenantID: 43545180-b7d6-410f-8328-eacfc8b660ea
   devDeploymentsJson: > 
         [
             {
-              "environment": "environmentTests-dev",
+              "environment": "QenvironmentTests-dev",
               "templateParameterFile": "./environmentTests/main.dev.bicepparam",
               "resourceGroupName": "environmentTests-dev",
               "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
@@ -42,7 +41,7 @@ jobs:
       templateFile: ${{env.templateFile}}
       devDeploymentsJson: ${{env.devDeploymentsJson}}
       prdDeploymentsJson: ${{env.prdDeploymentsJson}}
-      devWorkloadIdentityAppID: ${{env.devWorkloadIdentityAppID}}
+      devWorkloadIdentityAppID: ${{vars.id_gha_abkgaard_ablPublic_environmentTests_dev}}
       prdWorkloadIdentityAppID: ${{env.prdWorkloadIdentityAppID}}
       workloadIdentitySubID: ${{env.workloadIdentitySubID}}
       workloadIdentityTenantID: ${{env.workloadIdentityTenantID}}
@@ -79,6 +78,7 @@ jobs:
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
   
   validatePrd:
+    if: contains('refs/heads/main', github.ref)
     strategy:
       fail-fast: false # ensures that other validate jobs can finish instead of getting interrupted by a single failure
       matrix:
@@ -119,7 +119,7 @@ jobs:
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
 
   deployPrd:
-    
+    if: contains('refs/heads/main', github.ref)
     strategy:
       fail-fast: false # ensures that other deploy jobs can finish instead of getting interrupted by a single failure
       matrix:
