@@ -79,7 +79,6 @@ jobs:
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
   
   validatePrd:
-    if: contains('refs/heads/main', github.ref)
     strategy:
       fail-fast: false # ensures that other validate jobs can finish instead of getting interrupted by a single failure
       matrix:
@@ -120,7 +119,7 @@ jobs:
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
 
   deployPrd:
-    if: contains('refs/heads/main', github.ref)
+    
     strategy:
       fail-fast: false # ensures that other deploy jobs can finish instead of getting interrupted by a single failure
       matrix:
