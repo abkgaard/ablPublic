@@ -62,7 +62,10 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-    secrets: inherit
+    secrets:
+      WORKLOADIDENTITYAPPID: ${{ secrets.WORKLOADIDENTITYAPPID }}
+      WORKLOADIDENTITYSUBID: ${{ secrets.WORKLOADIDENTITYSUBID }}
+      WORKLOADIDENTITYTENANTID: ${{ secrets.WORKLOADIDENTITYTENANTID }}
 
   deploy:
     strategy:
