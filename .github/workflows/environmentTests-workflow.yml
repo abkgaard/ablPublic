@@ -11,18 +11,24 @@ permissions:
 
 env:
   templateFile: ./environmentTests/main.bicep
-  deploymentsJson: > 
+  prdWorkloadIdentityAppID: 2b10c58e-fd7c-4599-adfc-205c68e9e79d
+  workloadIdentitySubID: 7a86d903-0585-40e1-8af9-92a5efc19c1c
+  workloadIdentityTenantID: 43545180-b7d6-410f-8328-eacfc8b660ea
+  devDeploymentsJson: > 
+        [
+            {
+              "environment": "environmentTests-dev",
+              "templateParameterFile": "./environmentTests/main.dev.bicepparam",
+              "resourceGroupName": "environmentTests-dev",
+              "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
+            }
+        ]
+  prdDeploymentsJson: > 
         [
             {
               "environment": "environmentTests-prd",
               "templateParameterFile": "./environmentTests/main.prd.bicepparam",
               "resourceGroupName": "environmentTests-prd",
-              "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
-            },
-            {
-              "environment": "environmentTests-dev",
-              "templateParameterFile": "./environmentTests/main.dev.bicepparam",
-              "resourceGroupName": "environmentTests-dev",
               "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
             }
         ]
@@ -33,7 +39,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       templateFile: ${{env.templateFile}}
-      deploymentsJson: ${{env.deploymentsJson}}
+      devDeploymentsJson: ${{env.devDeploymentsJson}}
+      prdDeploymentsJson: ${{env.prdDeploymentsJson}}
       deploymentName: ${{steps.set_variables.outputs.deploymentName}}
     steps:
       - name: Set string manipulated variables
@@ -46,11 +53,11 @@ jobs:
           echo "deploymentName=$deploymentName" >> $GITHUB_OUTPUT
         shell: bash
 
-  validate:
+  validateDev:
     strategy:
       fail-fast: false # ensures that other validate jobs can finish instead of getting interrupted by a single failure
       matrix:
-          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.deploymentsJson)}}
+          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.devDeploymentsJson)}}
     
     name: Validate ${{matrix.deploymentsJson.environment}}
     needs: initVariables
@@ -62,19 +69,33 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-    secrets:
-      WORKLOADIDENTITYAPPID: ${{ secrets.WORKLOADIDENTITYAPPID }}
-      WORKLOADIDENTITYSUBID: ${{ secrets.WORKLOADIDENTITYSUBID }}
-      WORKLOADIDENTITYTENANTID: ${{ secrets.WORKLOADIDENTITYTENANTID }}
+  
+  validatePrd:
+    if: contains('refs/heads/main', github.ref)
+    strategy:
+      fail-fast: false # ensures that other validate jobs can finish instead of getting interrupted by a single failure
+      matrix:
+          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.prdDeploymentsJson)}}
+    
+    name: Validate ${{matrix.deploymentsJson.environment}}
+    needs: initVariables
+    uses: abkgaard/workflowTemplates/.github/workflows/AzureRGValidation_env.yml@main
+    with:
+      environment: ${{matrix.deploymentsJson.environment}}
+      templateFile: ${{needs.initVariables.outputs.templateFile}}
+      templateParameterFile: ${{matrix.deploymentsJson.templateParameterFile}}
+      resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
+      subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
+      deploymentName: ${{needs.initVariables.outputs.deploymentName}}
 
-  deploy:
+  deployDev:
     strategy:
       fail-fast: false # ensures that other deploy jobs can finish instead of getting interrupted by a single failure
       matrix:
-          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.deploymentsJson)}}
+          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.devDeploymentsJson)}}
     
     name: Deploy ${{matrix.deploymentsJson.environment}}
-    needs: [initVariables, validate]
+    needs: [initVariables, validateDev]
     uses: abkgaard/workflowTemplates/.github/workflows/AzureRGDeployment_env.yml@main
     with:
       environment: ${{matrix.deploymentsJson.environment}}
@@ -83,4 +104,22 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-    secrets: inherit
+
+
+  deployPrd:
+    if: contains('refs/heads/main', github.ref)
+    strategy:
+      fail-fast: false # ensures that other deploy jobs can finish instead of getting interrupted by a single failure
+      matrix:
+          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.devDeploymentsJson)}}
+    
+    name: Deploy ${{matrix.deploymentsJson.environment}}
+    needs: [initVariables, validatePrd]
+    uses: abkgaard/workflowTemplates/.github/workflows/AzureRGDeployment_env.yml@main
+    with:
+      environment: ${{matrix.deploymentsJson.environment}}
+      templateFile: ${{needs.initVariables.outputs.templateFile}}
+      templateParameterFile: ${{matrix.deploymentsJson.templateParameterFile}}
+      resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
+      subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
+      deploymentName: ${{needs.initVariables.outputs.deploymentName}}
