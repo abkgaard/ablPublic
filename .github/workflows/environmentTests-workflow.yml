@@ -94,7 +94,7 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      workloadIdentityAppId: ${{needs.initVariables.outputs.prdWorkloadIdentityAppID}}
+      #workloadIdentityAppId: #{{needs.initVariables.outputs.prdWorkloadIdentityAppID}}
       workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
 
