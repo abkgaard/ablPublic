@@ -41,7 +41,7 @@ jobs:
       templateFile: ${{env.templateFile}}
       devDeploymentsJson: ${{env.devDeploymentsJson}}
       prdDeploymentsJson: ${{env.prdDeploymentsJson}}
-      devWorkloadIdentityAppID: ${{vars.id_gha_abkgaard_ablPublic_environmentTests_dev}}
+      #devWorkloadIdentityAppID: {{vars.id_gha_abkgaard_ablPublic_environmentTests_dev}}
       prdWorkloadIdentityAppID: ${{env.prdWorkloadIdentityAppID}}
       workloadIdentitySubID: ${{env.workloadIdentitySubID}}
       workloadIdentityTenantID: ${{env.workloadIdentityTenantID}}
@@ -73,7 +73,7 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      workloadIdentityAppId: ${{needs.initVariables.outputs.devWorkloadIdentityAppID}}
+      #workloadIdentityAppId: #{{needs.initVariables.outputs.devWorkloadIdentityAppID}}
       workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
   
