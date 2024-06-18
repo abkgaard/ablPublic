@@ -17,7 +17,7 @@ env:
   devDeploymentsJson: > 
         [
             {
-              "environment": "QenvironmentTests-dev",
+              "environment": "environmentTests-dev",
               "templateParameterFile": "./environmentTests/main.dev.bicepparam",
               "resourceGroupName": "environmentTests-dev",
               "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
