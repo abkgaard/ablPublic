@@ -41,10 +41,6 @@ jobs:
       templateFile: ${{env.templateFile}}
       devDeploymentsJson: ${{env.devDeploymentsJson}}
       prdDeploymentsJson: ${{env.prdDeploymentsJson}}
-      #devWorkloadIdentityAppID: {{vars.id_gha_abkgaard_ablPublic_environmentTests_dev}}
-      prdWorkloadIdentityAppID: ${{env.prdWorkloadIdentityAppID}}
-      workloadIdentitySubID: ${{env.workloadIdentitySubID}}
-      workloadIdentityTenantID: ${{env.workloadIdentityTenantID}}
       deploymentName: ${{steps.set_variables.outputs.deploymentName}}
     steps:
       - name: Set string manipulated variables
@@ -73,9 +69,6 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      #workloadIdentityAppId: #{{needs.initVariables.outputs.devWorkloadIdentityAppID}}
-      workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
-      workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
   
   validatePrd:
     if: contains('refs/heads/main', github.ref)
@@ -94,9 +87,6 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      #workloadIdentityAppId: #{{needs.initVariables.outputs.prdWorkloadIdentityAppID}}
-      workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
-      workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
 
   deployDev:
     strategy:
@@ -114,9 +104,7 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      workloadIdentityAppId: ${{needs.initVariables.outputs.devWorkloadIdentityAppID}}
-      workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
-      workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
+
 
   deployPrd:
     if: contains('refs/heads/main', github.ref)
@@ -135,6 +123,3 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      workloadIdentityAppId: ${{needs.initVariables.outputs.prdWorkloadIdentityAppID}}
-      workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
-      workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
