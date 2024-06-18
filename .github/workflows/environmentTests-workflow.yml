@@ -115,7 +115,7 @@ jobs:
       resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
       subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
       deploymentName: ${{needs.initVariables.outputs.deploymentName}}
-      workloadIdentityAppId: ${{needs.initVariables.outputs.prdWorkloadIdentityAppID}}
+      workloadIdentityAppId: ${{needs.initVariables.outputs.devWorkloadIdentityAppID}}
       workloadIdentitySubId: ${{needs.initVariables.outputs.workloadIdentitySubID}}
       workloadIdentityTenantId: ${{needs.initVariables.outputs.workloadIdentityTenantID}}
 
@@ -127,7 +127,7 @@ jobs:
           deploymentsJson: ${{ fromJson(needs.initVariables.outputs.devDeploymentsJson)}}
     
     name: Deploy ${{matrix.deploymentsJson.environment}}
-    needs: [initVariables, validateDev]
+    needs: [initVariables, validatePrd]
     uses: abkgaard/workflowTemplates/.github/workflows/AzureRGDeployment_env.yml@main
     with:
       environment: ${{matrix.deploymentsJson.environment}}
