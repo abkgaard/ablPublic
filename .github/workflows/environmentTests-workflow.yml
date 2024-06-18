@@ -1,0 +1,83 @@
+name: environmentTests
+run-name: ${{github.workflow}}.branch_${{github.ref_name}}.${{github.event_name}}.${{github.run_attempt}}
+
+on:
+  workflow_dispatch:
+
+#required for workload federation with Azure
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  templateFile: ./environmentTests/main.bicep
+  deploymentsJson: > 
+        [
+            {
+              "environment": "environmentTests-prd",
+              "templateParameterFile": "./environmentTests/main.prd.bicepparam",
+              "resourceGroupName": "environmentTests-prd",
+              "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
+            },
+            {
+              "environment": "environmentTests-dev"
+              "templateParameterFile": "./environmentTests/main.dev.bicepparam",
+              "resourceGroupName": "environmentTests-dev",
+              "subscriptionId": "7a86d903-0585-40e1-8af9-92a5efc19c1c"
+            }
+        ]
+
+jobs:
+  initVariables:
+    name: Initialize Variables
+    runs-on: ubuntu-latest
+    outputs:
+      templateFile: ${{env.templateFile}}
+      deploymentsJson: ${{env.deploymentsJson}}
+      deploymentName: ${{steps.set_variables.outputs.deploymentName}}
+    steps:
+      - name: Set string manipulated variables
+        id: set_variables
+        run: |
+          echo "Exposing environment variables due to limitation in reusable workflows"
+          currentDate=$(date +"%Y%m%d-%H%M")
+          deploymentName=$(echo "${{github.workflow}}.$currentDate" | tr -d ' ')
+          echo "deploymentName: $deploymentName"
+          echo "deploymentName=$deploymentName" >> $GITHUB_OUTPUT
+        shell: bash
+
+  validate:
+    strategy:
+      fail-fast: false # ensures that other validate jobs can finish instead of getting interrupted by a single failure
+      matrix:
+          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.deploymentsJson)}}
+    
+    name: Validate ${{matrix.deploymentsJson.environment}}
+    needs: initVariables
+    uses: abkgaard/workflowTemplates/.github/workflows/AzureRGValidation_env.yml@main
+    with:
+      environment: ${{matrix.deploymentsJson.environment}}
+      templateFile: ${{needs.initVariables.outputs.templateFile}}
+      templateParameterFile: ${{matrix.deploymentsJson.templateParameterFile}}
+      resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
+      subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
+      deploymentName: ${{needs.initVariables.outputs.deploymentName}}
+    secrets: inherit
+
+  deploy:
+    strategy:
+      fail-fast: false # ensures that other deploy jobs can finish instead of getting interrupted by a single failure
+      matrix:
+          deploymentsJson: ${{ fromJson(needs.initVariables.outputs.deploymentsJson)}}
+    
+    name: Deploy ${{matrix.deploymentsJson.environment}}
+    needs: [initVariables, validate]
+    uses: abkgaard/workflowTemplates/.github/workflows/AzureRGDeployment_env.yml@main
+    with:
+      environment: ${{matrix.deploymentsJson.environment}}
+      templateFile: ${{needs.initVariables.outputs.templateFile}}
+      templateParameterFile: ${{matrix.deploymentsJson.templateParameterFile}}
+      resourceGroupName: ${{matrix.deploymentsJson.resourceGroupName}}
+      subscriptionId: ${{matrix.deploymentsJson.subscriptionId}}
+      deploymentName: ${{needs.initVariables.outputs.deploymentName}}
+    secrets: inherit
